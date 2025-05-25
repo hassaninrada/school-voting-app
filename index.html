@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Voting System</title>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 40px; }
+    button { margin: 10px; padding: 10px 20px; font-size: 18px; }
+    input { padding: 8px; margin: 5px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div id="auth">
+    <h2>Login to Vote</h2>
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <button onclick="signup()">Sign Up</button>
+  </div>
+
+  <div id="voting" class="hidden">
+    <h2>Welcome, <span id="user-email"></span></h2>
+    <h3>Vote for Your Candidate</h3>
+    <button onclick="vote('Alice')">Alice</button>
+    <button onclick="vote('Bob')">Bob</button>
+    <button onclick="vote('Charlie')">Charlie</button>
+    <h3>Results:</h3>
+    <p id="alice">Alice: 0</p>
+    <p id="bob">Bob: 0</p>
+    <p id="charlie">Charlie: 0</p>
+    <br>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    // Replace this with your Firebase config (from Firebase console)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, password).catch(alert);
+    }
+
+    function signup() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(email, password).catch(alert);
+    }
+
+    function logout() { auth.signOut(); }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("auth").classList.add("hidden");
+        document.getElementById("voting").classList.remove("hidden");
+        document.getElementById("user-email").textContent = user.email;
+      } else {
+        document.getElementById("auth").classList.remove("hidden");
+        document.getElementById("voting").classList.add("hidden");
+      }
+    });
+
+    function vote(candidate) {
+      const ref = db.ref("votes/" + candidate);
+      ref.transaction(current => (current || 0) + 1);
+    }
+
+    function listenForVotes() {
+      ["Alice", "Bob", "Charlie"].forEach(name => {
+        db.ref("votes/" + name).on("value", snapshot => {
+          document.getElementById(name.toLowerCase()).textContent = `${name}: ${snapshot.val() || 0}`;
+        });
+      });
+    }
+    listenForVotes();
+  </script>
+ <script src="firebase config (2).js"></script>
+
+
+</body>
+</html>
